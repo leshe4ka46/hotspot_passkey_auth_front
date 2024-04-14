@@ -29,7 +29,7 @@ import { getInfo } from "../services/APIService.ts";
 import SecurityKey from "../components/SecurityKey.tsx";
 const totalTime = 5;
 export default function Login() {
-  const searchParams = new URLSearchParams(document.location.search);
+  const searchParams = React.useMemo(()=>(new URLSearchParams(document.location.search)),[]);
   const { currentTheme, isDarkMode, toggleDarkMode } = useThemeContext();
   const [error, setError] = React.useState(false);
   const [progress, setProgress] = React.useState(0);
@@ -56,7 +56,7 @@ export default function Login() {
         }
       }
     })();
-  }, [setUsername]);
+  }, [setUsername, isSecure]);
   const assertionSuccess = (a: string) => {
     setUsername(a);
     setLoggedIn(true);
@@ -77,7 +77,7 @@ export default function Login() {
         });
       }, (totalTime * 1000) / 100);
     }
-  }, [finalStage]);
+  }, [finalStage, searchParams]);
 
   React.useEffect(() => {
     setWebauthnSupported(isWebauthnSupported());
@@ -97,7 +97,7 @@ export default function Login() {
 
   React.useEffect(() => {
     setMac(searchParams.get("mac")!);
-  }, []);
+  }, [searchParams]);
 
   const handleLoginClick = async () => {
     let mac: string = searchParams.get("mac")!;
