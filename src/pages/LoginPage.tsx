@@ -20,18 +20,19 @@ import Brightness7Icon from "@mui/icons-material/Brightness7";
 import LogoutIcon from "@mui/icons-material/Logout";
 
 import u2fApi from "u2f-api";
-import { logout, login } from "../services/ClientService.ts";
+import { logout, login, radiusLogin } from "../services/ClientService.ts";
 import {
   isWebauthnSecure,
   isWebauthnSupported,
 } from "../services/WebauthnService.ts";
 import { getInfo } from "../services/APIService.ts";
 import SecurityKey from "../components/SecurityKey.tsx";
-
+const totalTime = 5;
 export default function Login() {
   const searchParams = new URLSearchParams(document.location.search);
   const { currentTheme, isDarkMode, toggleDarkMode } = useThemeContext();
   const [error, setError] = React.useState(false);
+  const [progress, setProgress] = React.useState(0);
   const [errorText, setErrorText] = React.useState("");
   const [mac, setMac] = React.useState("totallyTempMac");
   const [username, setUsername] = React.useState("");
@@ -42,13 +43,17 @@ export default function Login() {
   const [u2fSupported, setU2FSupported] = React.useState(false);
   const [webauthnSupported, setWebauthnSupported] = React.useState(false);
   //const [platformAuthenticator, setPlatformAuthenticator] =
-  React.useState(false);
+  //React.useState(false);
   React.useEffect(() => {
     (async () => {
       const info = await getInfo();
       if (info && info.username !== "") {
         setUsername(info.username);
         setLoggedIn(true);
+        if (!isSecure) {
+          radiusLogin();
+          setFinalStage(true);
+        }
       }
     })();
   }, [setUsername]);
@@ -60,6 +65,19 @@ export default function Login() {
   React.useEffect(() => {
     setIsSecure(isWebauthnSecure());
   }, [setIsSecure]);
+
+  React.useEffect(() => {
+    if (finalStage) {
+      setInterval(() => {
+        setProgress(prevCounter => {
+          if (prevCounter === 100) {
+            window.location.replace(searchParams.get("link-orig")!);
+          }
+          return prevCounter + 1;
+        });
+      }, (totalTime * 1000) / 100);
+    }
+  }, [finalStage]);
 
   React.useEffect(() => {
     setWebauthnSupported(isWebauthnSupported());
@@ -96,6 +114,10 @@ export default function Login() {
       setError(false);
       setErrorText("");
       setLoggedIn(true);
+      if (!isSecure) {
+        radiusLogin()
+        setFinalStage(true);
+      }
     } else {
       setError(true);
       setErrorText("Неверный логин или пароль");
@@ -211,7 +233,7 @@ export default function Login() {
                 />
               </Box>
             ) : (
-              <CircularProgress />
+              <CircularProgress variant="determinate" value={progress} />
             )}
           </Box>
         </Box>
