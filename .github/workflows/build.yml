@@ -15,6 +15,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout
+        uses: https://gitea.com/actions/checkout@v4
       - name: Setup Node
         uses: https://gitea.com/actions/setup-node@v4
         with:
