@@ -22,6 +22,14 @@ jobs:
         with:
           node-version: "20"
           cache: ${{ steps.detect-package-manager.outputs.manager }}
+      - name: Restore cache
+        uses: https://gitea.com/actions/cache@v3
+        with:
+          path: |
+            .next/cache
+          key: ${{ runner.os }}-build-${{ hashFiles('**/package-lock.json', '**/yarn.lock') }}-${{ hashFiles('**.[jt]s', '**.[jt]sx') }}
+          restore-keys: |
+            ${{ runner.os }}-build-${{ hashFiles('**/package-lock.json', '**/yarn.lock') }}-
       - name: Install dependencies
         run: npm i
       - name: Build
@@ -30,7 +38,7 @@ jobs:
         uses: https://gitea.com/aquelle1/ssh-deploy@main
         env:
           SSH_PRIVATE_KEY: ${{ secrets.SSH_KEY }}
-          ARGS: "-r" 
+          ARGS: "-r"
           SOURCE: "build/"
           REMOTE_HOST: ${{ secrets.SSH_HOST }}
           REMOTE_USER: ${{ secrets.SSH_USER }}
