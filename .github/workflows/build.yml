@@ -24,7 +24,7 @@ jobs:
           cache: ${{ steps.detect-package-manager.outputs.manager }}
       - name: Restore cached Primes
         id: cache-primes-restore
-        uses: actions/cache/restore@v4
+        uses: https://gitea.com/actions/cache/restore@v4
         with:
           path: |
             node-modules
@@ -45,7 +45,7 @@ jobs:
           TARGET: ${{ secrets.SSH_DIR }}
       - name: Save Primes
         id: cache-primes-save
-        uses: actions/cache/save@v4
+        uses: https://gitea.com/actions/cache/save@v4
         with:
           path: |
             node-modules
