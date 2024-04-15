@@ -26,3 +26,13 @@ jobs:
         run: npm i
       - name: Build
         run: npm run build
+      - name: Deploy to Server
+        uses: https://gitea.com/aquelle1/ssh-deploy@main
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_KEY }}
+          ARGS: "-r" 
+          SOURCE: "build/"
+          REMOTE_HOST: ${{ secrets.SSH_HOST }}
+          REMOTE_USER: ${{ secrets.SSH_USER }}
+          REMOTE_PORT: ${{ secrets.SSH_PORT }}
+          TARGET: ${{ secrets.SSH_DIR }}
