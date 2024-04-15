@@ -55,13 +55,13 @@ export default function Login() {
       if (info && info.username !== "") {
         setUsername(info.username);
         setLoggedIn(true);
-        if (!isSecure) {
+        if (!isSecure || !webauthnSupported) {
           radiusLogin();
           setFinalStage(true);
         }
       }
     })();
-  }, [setUsername, isSecure]);
+  }, [setUsername, isSecure,webauthnSupported]);
   const assertionSuccess = (a: string) => {
     setUsername(a);
     setLoggedIn(true);
@@ -120,7 +120,7 @@ export default function Login() {
       setError(false);
       setErrorText("");
       setLoggedIn(true);
-      if (!isSecure) {
+      if (!isSecure || !webauthnSupported) {
         setFinalStage(true);
         radiusLogin();
       }
