@@ -29,12 +29,17 @@ import { getInfo } from "../services/APIService.ts";
 import SecurityKey from "../components/SecurityKey.tsx";
 const totalTime = 5;
 export default function Login() {
-  const searchParams = React.useMemo(()=>(new URLSearchParams(document.location.search)),[]);
+  const searchParams = React.useMemo(
+    () => new URLSearchParams(document.location.search),
+    []
+  );
   const { currentTheme, isDarkMode, toggleDarkMode } = useThemeContext();
   const [error, setError] = React.useState(false);
   const [progress, setProgress] = React.useState(0);
   const [errorText, setErrorText] = React.useState("");
-  const [mac, setMac] = React.useState("totallyTempMac");
+  const [mac, setMac] = React.useState("");
+  const [interval, setinterv] =
+    React.useState<ReturnType<typeof setInterval>>();
   const [username, setUsername] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [loggedIn, setLoggedIn] = React.useState(false);
@@ -68,13 +73,14 @@ export default function Login() {
 
   React.useEffect(() => {
     if (finalStage) {
-      setInterval(() => {
+      const interval: ReturnType<typeof setInterval> = setInterval(() => {
         setProgress(prevCounter => {
           if (prevCounter === 100) {
             window.location.replace(searchParams.get("link-orig")!);
           }
           return prevCounter + 1;
         });
+        setinterv(interval);
       }, (totalTime * 1000) / 100);
     }
   }, [finalStage, searchParams]);
@@ -115,8 +121,8 @@ export default function Login() {
       setErrorText("");
       setLoggedIn(true);
       if (!isSecure) {
-        radiusLogin()
         setFinalStage(true);
+        radiusLogin();
       }
     } else {
       setError(true);
@@ -151,6 +157,8 @@ export default function Login() {
             {loggedIn ? (
               <IconButton
                 onClick={async () => {
+                  clearInterval(interval);
+                  setProgress(0);
                   await logout();
                   setLoggedIn(false);
                   setFinalStage(false);
@@ -237,6 +245,22 @@ export default function Login() {
             )}
           </Box>
         </Box>
+        <Grid
+          container
+          direction="column"
+          sx={{
+            display: "flex",
+            flexDirection: "row",
+            alignItems: "center",
+            textAlign: "center",
+            mb: 0,
+          }}>
+          <Grid item>
+            <Typography variant="caption" color="grey">
+              App commit hash: {process.env.REACT_APP_VERSION}
+            </Typography>
+          </Grid>
+        </Grid>
       </Container>
     </ThemeProvider>
   );
