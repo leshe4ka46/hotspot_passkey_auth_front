@@ -258,7 +258,7 @@ export default function Login() {
                     </Button>
                   </Box>
                 ) : undefined}
-                {!isSecure ? (
+                {!isSecure || !webauthnSupported ? (
                   <Button fullWidth variant="contained" onClick={() => {setDialogOpen(true)}}>
                     Вход с ключом
                   </Button>
