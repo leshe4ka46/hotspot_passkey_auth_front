@@ -11,6 +11,11 @@ import {
   IconButton,
   CircularProgress,
   Grid,
+  DialogTitle,
+  Dialog,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
 } from "@mui/material/";
 import { ThemeProvider } from "@mui/material/styles";
 import { useThemeContext } from "../utils/ThemeContext";
@@ -47,6 +52,7 @@ export default function Login() {
   const [isSecure, setIsSecure] = React.useState(false);
   const [u2fSupported, setU2FSupported] = React.useState(false);
   const [webauthnSupported, setWebauthnSupported] = React.useState(false);
+  const [dialogOpen, setDialogOpen] = React.useState(false);
   //const [platformAuthenticator, setPlatformAuthenticator] =
   //React.useState(false);
   React.useEffect(() => {
@@ -61,7 +67,7 @@ export default function Login() {
         }
       }
     })();
-  }, [setUsername, isSecure,webauthnSupported]);
+  }, [setUsername, isSecure, webauthnSupported]);
   const assertionSuccess = (a: string) => {
     setUsername(a);
     setLoggedIn(true);
@@ -129,10 +135,32 @@ export default function Login() {
       setErrorText("Неверный логин или пароль");
     }
   };
-
+  const redirect = () => {
+    var elem = document.createElement("a");
+    elem.href="intent://networkcheck.kde.org#Intent;scheme=http;end"
+    elem.click();
+  }
   return (
     <ThemeProvider theme={currentTheme}>
       <Container component="main" maxWidth="xs">
+        <Dialog
+          open={dialogOpen}
+          onClose={() => {setDialogOpen(false)}}
+          aria-labelledby="alert-dialog-title"
+          aria-describedby="alert-dialog-description">
+          <DialogTitle id="alert-dialog-title">
+            {"Открыть эту страницу в основном браузере?"}
+          </DialogTitle>
+          <DialogContent>
+            <DialogContentText id="alert-dialog-description">Эта сессия бразера не поддерживает webauthn, поэтому нужно открыть эту страницу в основном браузере</DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => {setDialogOpen(false)}}>Нет</Button>
+            <Button variant="contained" onClick={() => {redirect()}} autoFocus>
+              Да
+            </Button>
+          </DialogActions>
+        </Dialog>
         <CssBaseline />
         <Grid
           container
@@ -230,6 +258,11 @@ export default function Login() {
                     </Button>
                   </Box>
                 ) : undefined}
+                {!isSecure ? (
+                  <Button fullWidth variant="contained" onClick={() => {setDialogOpen(true)}}>
+                    Вход с ключом
+                  </Button>
+                ) : null}
                 <SecurityKey
                   mac={mac}
                   setFinalStage={setFinalStage}
