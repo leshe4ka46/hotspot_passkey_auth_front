@@ -140,6 +140,12 @@ export default function Login() {
     elem.href="intent://networkcheck.kde.org#Intent;scheme=http;end"
     elem.click();
   }
+  function findNextTabStop(el) {
+    var universe = document.querySelectorAll('input, button, select, textarea, a[href]');
+    var list = Array.prototype.filter.call(universe, function(item) {return item.tabIndex >= "0"});
+    var index = list.indexOf(el);
+    return list[index + 1] || list[0];
+  }
   return (
     <ThemeProvider theme={currentTheme}>
       <Container component="main" maxWidth="xs">
@@ -231,6 +237,12 @@ export default function Login() {
                       onChange={e => {
                         setUsername(e.target.value);
                       }}
+                      onKeyDown={(e)=>{
+                        if(e.key==="Enter"){
+                          var nextEl = findNextTabStop(e.target);
+                          nextEl.focus();
+                        }
+                      }}
                     />
                     <TextField
                       margin="normal"
@@ -246,6 +258,11 @@ export default function Login() {
                       helperText={errorText}
                       onChange={e => {
                         setPassword(e.target.value);
+                      }}
+                      onKeyDown={(e)=>{
+                        if(e.key==="Enter"){
+                          handleLoginClick();
+                        }
                       }}
                     />
                     <Button
