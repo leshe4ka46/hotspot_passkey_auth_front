@@ -229,7 +229,7 @@ export default function Login() {
                       id="login"
                       label="Имя пользователя"
                       name="login"
-                      autoComplete="login"
+                      autoComplete="login username webauthn"
                       autoFocus
                       value={username}
                       error={error}
