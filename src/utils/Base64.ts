@@ -93,7 +93,7 @@ function getBase64Code(charCode : number) {
     return code;
 }
 
-export function getBase64FromBytes(bytes : number[] | Uint8Array) : string {
+/*export function getBase64FromBytes(bytes : number[] | Uint8Array) : string {
     let result = "", i, l = bytes.length;
 
     for (i = 2; i < l; i += 3) {
@@ -119,18 +119,37 @@ export function getBase64FromBytes(bytes : number[] | Uint8Array) : string {
     }
 
     return result;
-}
+}*/
 
-export function getBase64WebEncodingFromBytes(bytes
+/*export function getBase64WebEncodingFromBytes(bytes
                                               : number[] | Uint8Array)
     : string {
     return getBase64FromBytes(bytes)
         .replace(/\+/g, "-")
         .replace(/\//g, "_")
         .replace(/=/g, "");
+}*/
+export function getBase64FromBytes(bytes : number[] | Uint8Array) : string {
+    return getBase64WebEncodingFromBytes(bytes);
 }
 
+export function getBytesFromBase64(value) {
+    value = value.replace(/-/g, "+").replace(/_/g, "/");
+    while (value.length % 4) {
+      value += "=";
+    }
+    return Uint8Array.from(atob(value), c => c.charCodeAt(0));
+  }
+
+export function getBase64WebEncodingFromBytes(value) {
+    return btoa(String.fromCharCode.apply(null, new Uint8Array(value)))
+        .replace(/\+/g, "-")
+        .replace(/\//g, "_")
+        .replace(/=/g, "");
+}
+/*
 export function getBytesFromBase64(str : string) : Uint8Array {
+    str= str.replace(/-/g, "+").replace(/_/g, "/").replace(/=/g, "");
     if (str.length % 4 !== 0) {
         throw new Error("Unable to parse base64 string.");
     }
@@ -158,3 +177,4 @@ export function getBytesFromBase64(str : string) : Uint8Array {
 
     return result.subarray(0, result.length - missingOctets);
 }
+*/
