@@ -45,7 +45,7 @@ for (let i = 0; i < 10; ++i) {
 }
 base64Chars.push("+");
 base64Chars.push("/");
-*/
+
 
 const base64Chars = [
     "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M",
@@ -55,7 +55,6 @@ const base64Chars = [
     "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "+", "/",
 ];
 
-/*
 // This constant can also be computed with the following algorithm:
 const l = 256, base64codes = new Uint8Array(l);
 for (let i = 0; i < l; ++i) {
@@ -66,7 +65,6 @@ base64Chars.forEach((char, index) => {
 });
 base64codes["=".charCodeAt(0)] = 0; // ignored anyway, so we just need to
 prevent an error
-*/
 
 const base64Codes = [
     255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
@@ -93,7 +91,7 @@ function getBase64Code(charCode : number) {
     return code;
 }
 
-/*export function getBase64FromBytes(bytes : number[] | Uint8Array) : string {
+export function getBase64FromBytes(bytes : number[] | Uint8Array) : string {
     let result = "", i, l = bytes.length;
 
     for (i = 2; i < l; i += 3) {
