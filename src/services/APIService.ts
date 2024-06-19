@@ -25,8 +25,12 @@ export function hasServiceError<T>(resp: AxiosResponse<ServiceResponse<T>>) {
     return { errored: false, message: null };
 }
 
-export async function getInfo(): Promise<Info | undefined> {
-    const response = await axios.get<ServiceResponse<Info>>(InfoPath);
-
-    return toData<Info>(response);
+export async function getInfo() : Promise<Info | undefined> {
+    try {
+        const response = await axios.get<ServiceResponse<Info>>(InfoPath);
+        return toData<Info>(response);
+    } catch (e) {
+        console.log(e)
+    }
+    return undefined;
 }

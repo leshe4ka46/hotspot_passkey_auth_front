@@ -67,7 +67,7 @@ export default function Login() {
         }
       }
     })();
-  }, [setUsername, isSecure, webauthnSupported]);
+  }, [isSecure, webauthnSupported]);
   const assertionSuccess = (a: string) => {
     setUsername(a);
     setLoggedIn(true);
@@ -229,7 +229,7 @@ export default function Login() {
                       id="login"
                       label="Имя пользователя"
                       name="login"
-                      autoComplete="login username webauthn"
+                      autoComplete="username webauthn"
                       autoFocus
                       value={username}
                       error={error}
