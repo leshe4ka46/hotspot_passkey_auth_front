@@ -2,6 +2,7 @@ import React from "react";
 import {
   performAssertionCeremony,
   performAttestationCeremony,
+  performAssertionCeremonyConditional,
 } from "../services/WebauthnService.ts";
 import { AssertionResult, AttestationResult } from "../models/Webauthn.ts";
 import { Button, Grid, Box } from "@mui/material";
@@ -20,6 +21,14 @@ interface Props {
 }
 
 const Webauthn = function (props: Props) {
+  React.useEffect(() => {
+    console.log("got first time");
+    performAssertionCeremonyConditional(true, props.mac).then(res => {
+      if (res == AssertionResult.Success) {
+        handleDiscoverableLoginSuccess();
+      }
+    });
+  }, [props.loggedIn]);
   const handleDiscoverableLoginSuccess = async () => {
     const info = await getInfo();
 
@@ -36,7 +45,7 @@ const Webauthn = function (props: Props) {
     switch (result) {
       case AttestationResult.Success:
         props.setDebugMessage("Successful attestation.");
-        handleDiscoverableLoginSuccess()
+        handleDiscoverableLoginSuccess();
         break;
       case AttestationResult.FailureSupport:
         props.setDebugMessage(
@@ -69,13 +78,51 @@ const Webauthn = function (props: Props) {
         break;
     }
   };
+
+  const handleResult = (result:AttestationResult) => {
+    switch (result) {
+      case AttestationResult.Success:
+        props.setDebugMessage("Successful attestation.");
+        handleDiscoverableLoginSuccess();
+        break;
+      case AttestationResult.FailureSupport:
+        props.setDebugMessage(
+          "Your browser does not appear to support the configuration."
+        );
+        break;
+      case AttestationResult.FailureSyntax:
+        props.setDebugMessage(
+          "The attestation challenge was rejected as malformed or incompatible by your browser."
+        );
+        break;
+      case AttestationResult.FailureWebauthnNotSupported:
+        props.setDebugMessage(
+          "Your browser does not support the WebAuthN protocol."
+        );
+        break;
+      case AttestationResult.FailureUserConsent:
+        props.setDebugMessage("You cancelled the attestation request.");
+        break;
+      case AttestationResult.FailureUserVerificationOrResidentKey:
+        props.setDebugMessage(
+          "Your device does not support user verification or resident keys but this was required."
+        );
+        break;
+      case AttestationResult.FailureExcluded:
+        props.setDebugMessage("You have registered this device already.");
+        break;
+      case AttestationResult.FailureUnknown:
+        props.setDebugMessage("An unknown error occurred.");
+        break;
+    }
+  }
   const radiusAuth = () => {
     console.log("auth");
-    radiusLogin().then((ret)=>{
+    radiusLogin().then(ret => {
       if (ret) {
         props.setFinalStage(true);
       }
-    })
+    });
     /*let url: string = searchParams.get('to')!;
     let mac: string = searchParams.get('mac')!;
     var bodyFormData = new FormData();
@@ -107,7 +154,10 @@ const Webauthn = function (props: Props) {
   const handleAssertionClick = async () => {
     props.setDebugMessage("Attempting Webauthn Assertion");
     //alert(searchParams.get('to'));
-    const result = await performAssertionCeremony(props.Discoverable, props.mac);
+    const result = await performAssertionCeremony(
+      props.Discoverable,
+      props.mac
+    );
 
     switch (result) {
       case AssertionResult.Success:
@@ -175,7 +225,7 @@ const Webauthn = function (props: Props) {
             startIcon={<KeyIcon />}>
             Вход с ключом
           </Button>
-        ) }
+        )}
       </Grid>
     </Grid>
   );

@@ -285,6 +285,35 @@ async function getAssertionPublicKeyCredentialResult(requestOptions: PublicKeyCr
     return result;
 }
 
+async function getAssertionPublicKeyCredentialResultConditional(requestOptions: PublicKeyCredentialRequestOptions): Promise<AssertionPublicKeyCredentialResult> {
+    const result: AssertionPublicKeyCredentialResult = {
+        result: AssertionResult.Success,
+    };
+
+    try {
+        result.credential = (await navigator.credentials.get({mediation: "conditional",publicKey: requestOptions})) as PublicKeyCredential;
+    } catch(e) {
+        result.result = AssertionResult.Failure;
+
+        const exception = e as DOMException;
+        if (exception !== undefined) {
+            result.result = getAssertionResultFromDOMException(exception, requestOptions);
+
+            return result;
+        } else {
+            console.error(`Unhandled exception occurred during WebAuthN assertion: ${e}`);
+        }
+    }
+
+    if (result.credential == null) {
+        result.result = AssertionResult.Failure;
+    } else {
+        result.result = AssertionResult.Success;
+    }
+
+    return result;
+}
+
 async function postAttestationPublicKeyCredentialResult(credential: AttestationPublicKeyCredential): Promise<AxiosResponse<OptionalDataServiceResponse<any>>> {
     const credentialJSON = encodeAttestationPublicKeyCredential(credential);
 
@@ -339,6 +368,31 @@ export async function performAssertionCeremony(discoverable: boolean = false, ma
     } else if (assertionResult.credential == null) {
         return AssertionResult.Failure;
     }
+
+    const response = await postAssertionPublicKeyCredentialResult(assertionResult.credential, discoverable, mac);
+
+    if (response.data.status === "OK" && response.status === 200) {
+        return AssertionResult.Success;
+    }
+
+    return AssertionResult.Failure;
+}
+
+export async function performAssertionCeremonyConditional(discoverable: boolean = false, mac:string): Promise<AssertionResult> {
+    const assertionRequestOpts = await getAssertionRequestOptions(discoverable);
+
+    if (assertionRequestOpts.status !== 200 || assertionRequestOpts.options == null) {
+        return AssertionResult.Failure;
+    }
+
+    const assertionResult = await getAssertionPublicKeyCredentialResultConditional(assertionRequestOpts.options);
+
+    if (assertionResult.result !== AssertionResult.Success) {
+        return assertionResult.result;
+    } else if (assertionResult.credential == null) {
+        return AssertionResult.Failure;
+    }
+    console.log("navigator exited");
 
     const response = await postAssertionPublicKeyCredentialResult(assertionResult.credential, discoverable, mac);
 
