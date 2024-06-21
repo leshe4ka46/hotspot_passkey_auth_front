@@ -1,4 +1,4 @@
-import { getEmbeddedVariable } from "../utils/Configuration.ts";
+import { getEmbeddedVariable } from "../utils/Configuration";
 
 const ExternalURL = getEmbeddedVariable("externalurl")
 

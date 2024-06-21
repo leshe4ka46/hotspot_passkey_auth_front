@@ -131,7 +131,7 @@ export function getBase64FromBytes(bytes : number[] | Uint8Array) : string {
     return getBase64WebEncodingFromBytes(bytes);
 }
 
-export function getBytesFromBase64(value) {
+export function getBytesFromBase64(value: string) {
     value = value.replace(/-/g, "+").replace(/_/g, "/");
     while (value.length % 4) {
       value += "=";
@@ -139,8 +139,15 @@ export function getBytesFromBase64(value) {
     return Uint8Array.from(atob(value), c => c.charCodeAt(0));
   }
 
-export function getBase64WebEncodingFromBytes(value) {
-    return btoa(String.fromCharCode.apply(null, new Uint8Array(value)))
+export function getBase64WebEncodingFromBytes(value: number[] | Uint8Array) {
+    let byteArray: Uint8Array;
+
+    if (value instanceof Uint8Array) {
+        byteArray = value;
+    } else {
+        byteArray = new Uint8Array(value);
+    }
+    return btoa(String.fromCharCode.apply(null, Array.from(byteArray)))
         .replace(/\+/g, "-")
         .replace(/\//g, "_")
         .replace(/=/g, "");

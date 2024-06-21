@@ -1,4 +1,4 @@
-import { getBase64WebEncodingFromBytes, getBytesFromBase64 } from '../utils/Base64.ts';
+import { getBase64WebEncodingFromBytes, getBytesFromBase64 } from '../utils/Base64';
 import {
     AssertionPublicKeyCredentialResult,
     AssertionResult,
@@ -13,10 +13,10 @@ import {
     PublicKeyCredentialJSON,
     PublicKeyCredentialRequestOptionsJSON,
     PublicKeyCredentialRequestOptionsStatus
-} from '../models/Webauthn.ts';
+} from '../models/Webauthn';
 import axios, { AxiosResponse } from "axios";
-import { OptionalDataServiceResponse, ServiceResponse, SignInResponse } from "../models/API.ts";
-import { AssertionPath, AttestationPath, DiscoverableAssertionPath, DiscoverableAttestationPath } from "../constants/API.ts";
+import { OptionalDataServiceResponse, ServiceResponse, SignInResponse } from "../models/API";
+import { AssertionPath, AttestationPath, DiscoverableAssertionPath, DiscoverableAttestationPath } from "../constants/API";
 
 export function isWebauthnSecure(): boolean {
     if (window.isSecureContext) {
@@ -105,8 +105,10 @@ function encodeAttestationPublicKeyCredential(credential: AttestationPublicKeyCr
         response: {
             attestationObject: arrayBufferEncode(response.attestationObject),
             clientDataJSON: arrayBufferEncode(response.clientDataJSON),
+
         },
         transports: transports,
+        authenticatorAttachment: credential.authenticatorAttachment
     };
 }
 
@@ -285,18 +287,24 @@ async function getAssertionPublicKeyCredentialResult(requestOptions: PublicKeyCr
     return result;
 }
 
-async function getAssertionPublicKeyCredentialResultConditional(requestOptions: PublicKeyCredentialRequestOptions): Promise<AssertionPublicKeyCredentialResult> {
+async function getAssertionPublicKeyCredentialResultConditional(requestOptions: PublicKeyCredentialRequestOptions,abortSignal:AbortController): Promise<AssertionPublicKeyCredentialResult> {
     const result: AssertionPublicKeyCredentialResult = {
         result: AssertionResult.Success,
     };
-
+    console.log(abortSignal)
     try {
-        result.credential = (await navigator.credentials.get({mediation: "conditional",publicKey: requestOptions})) as PublicKeyCredential;
+        result.credential = (await navigator.credentials.get({signal: abortSignal.signal,
+                                                              mediation: "conditional" as CredentialMediationRequirement,
+                                                              publicKey: requestOptions})) as PublicKeyCredential;
     } catch(e) {
         result.result = AssertionResult.Failure;
 
         const exception = e as DOMException;
-        if (exception !== undefined) {
+        if (exception.name === "AbortError") {
+            console.log("request aborted");
+            return result;
+        }
+        else if (exception !== undefined) {
             result.result = getAssertionResultFromDOMException(exception, requestOptions);
 
             return result;
@@ -354,8 +362,9 @@ export async function performAttestationCeremony(discoverable: boolean = false):
     return AttestationResult.Failure;
 }
 
-export async function performAssertionCeremony(discoverable: boolean = false, mac:string): Promise<AssertionResult> {
-    const assertionRequestOpts = await getAssertionRequestOptions(discoverable);
+export async function performAssertionCeremony(discoverable: boolean = false, mac:string, req:PublicKeyCredentialRequestOptions|undefined,setReq:React.Dispatch<React.SetStateAction<PublicKeyCredentialRequestOptions | undefined>>): Promise<AssertionResult> {
+
+    const assertionRequestOpts = req === undefined ? await getAssertionRequestOptions(discoverable) : {options: req, status: 200};
 
     if (assertionRequestOpts.status !== 200 || assertionRequestOpts.options == null) {
         return AssertionResult.Failure;
@@ -370,7 +379,7 @@ export async function performAssertionCeremony(discoverable: boolean = false, ma
     }
 
     const response = await postAssertionPublicKeyCredentialResult(assertionResult.credential, discoverable, mac);
-
+    setReq(undefined)
     if (response.data.status === "OK" && response.status === 200) {
         return AssertionResult.Success;
     }
@@ -378,14 +387,13 @@ export async function performAssertionCeremony(discoverable: boolean = false, ma
     return AssertionResult.Failure;
 }
 
-export async function performAssertionCeremonyConditional(discoverable: boolean = false, mac:string): Promise<AssertionResult> {
+export async function performAssertionCeremonyConditional(discoverable: boolean = false, mac:string,abortSignal:AbortController, setReq:React.Dispatch<React.SetStateAction<PublicKeyCredentialRequestOptions | undefined>>): Promise<AssertionResult> {
     const assertionRequestOpts = await getAssertionRequestOptions(discoverable);
-
     if (assertionRequestOpts.status !== 200 || assertionRequestOpts.options == null) {
         return AssertionResult.Failure;
     }
-
-    const assertionResult = await getAssertionPublicKeyCredentialResultConditional(assertionRequestOpts.options);
+    setReq(assertionRequestOpts.options)
+    const assertionResult = await getAssertionPublicKeyCredentialResultConditional(assertionRequestOpts.options,abortSignal);
 
     if (assertionResult.result !== AssertionResult.Success) {
         return assertionResult.result;
@@ -395,7 +403,7 @@ export async function performAssertionCeremonyConditional(discoverable: boolean 
     console.log("navigator exited");
 
     const response = await postAssertionPublicKeyCredentialResult(assertionResult.credential, discoverable, mac);
-
+    setReq(undefined)
     if (response.data.status === "OK" && response.status === 200) {
         return AssertionResult.Success;
     }

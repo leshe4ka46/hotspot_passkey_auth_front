@@ -3,14 +3,15 @@ import {
   performAssertionCeremony,
   performAttestationCeremony,
   performAssertionCeremonyConditional,
-} from "../services/WebauthnService.ts";
-import { AssertionResult, AttestationResult } from "../models/Webauthn.ts";
+} from "../services/WebauthnService";
+
+import { AssertionResult, AttestationResult } from "../models/Webauthn";
 import { Button, Grid, Box } from "@mui/material";
 import KeyIcon from "@mui/icons-material/Key";
-import { getInfo } from "../services/APIService.ts";
+import { getInfo } from "../services/APIService";
 //import axios from "axios";
 //import { hexMD5 } from "../utils/MD5.js";
-import { radiusLogin } from "../services/ClientService.ts";
+import { radiusLogin } from "../services/ClientService";
 interface Props {
   setDebugMessage: React.Dispatch<React.SetStateAction<string>>;
   Discoverable: boolean;
@@ -21,17 +22,39 @@ interface Props {
 }
 
 const Webauthn = function (props: Props) {
+  const [abortController, setabortController] =
+    React.useState<AbortController>();
+  const [abortSignal, setabortSignal] = React.useState<AbortSignal>();
+  const [req, setReq] = React.useState<PublicKeyCredentialRequestOptions>();
   React.useEffect(() => {
-    console.log("got first time");
-    performAssertionCeremonyConditional(true, props.mac).then(res => {
-      if (res == AssertionResult.Success) {
-        handleDiscoverableLoginSuccess();
-      }
-    });
+    abortController?.abort();
+    if (!props.loggedIn) {
+      var abortControllerlocal = new AbortController();
+      setabortController(abortControllerlocal);
+      setabortSignal(abortControllerlocal.signal);
+      console.log(abortControllerlocal);
+      console.log("got first time");
+    }
+  // eslint-disable-next-line
   }, [props.loggedIn]);
+  React.useEffect(() => {
+    if (!props.loggedIn && abortController) {
+      console.log("running conditional attestation");
+      performAssertionCeremonyConditional(
+        true,
+        props.mac,
+        abortController,
+        setReq
+      ).then(res => {
+        if (res === AssertionResult.Success) {
+          handleDiscoverableLoginSuccess();
+        }
+      });
+    }
+  // eslint-disable-next-line
+  }, [abortController,abortSignal,props.loggedIn, props.mac]);
   const handleDiscoverableLoginSuccess = async () => {
     const info = await getInfo();
-
     if (info != null) {
       props.setBothUsername(info.username);
     }
@@ -39,7 +62,7 @@ const Webauthn = function (props: Props) {
 
   const handleAttestationClick = async (discoverable: boolean = false) => {
     props.setDebugMessage("Attempting Webauthn Attestation");
-
+    abortController?.abort();
     const result = await performAttestationCeremony(discoverable);
 
     switch (result) {
@@ -79,43 +102,6 @@ const Webauthn = function (props: Props) {
     }
   };
 
-  const handleResult = (result:AttestationResult) => {
-    switch (result) {
-      case AttestationResult.Success:
-        props.setDebugMessage("Successful attestation.");
-        handleDiscoverableLoginSuccess();
-        break;
-      case AttestationResult.FailureSupport:
-        props.setDebugMessage(
-          "Your browser does not appear to support the configuration."
-        );
-        break;
-      case AttestationResult.FailureSyntax:
-        props.setDebugMessage(
-          "The attestation challenge was rejected as malformed or incompatible by your browser."
-        );
-        break;
-      case AttestationResult.FailureWebauthnNotSupported:
-        props.setDebugMessage(
-          "Your browser does not support the WebAuthN protocol."
-        );
-        break;
-      case AttestationResult.FailureUserConsent:
-        props.setDebugMessage("You cancelled the attestation request.");
-        break;
-      case AttestationResult.FailureUserVerificationOrResidentKey:
-        props.setDebugMessage(
-          "Your device does not support user verification or resident keys but this was required."
-        );
-        break;
-      case AttestationResult.FailureExcluded:
-        props.setDebugMessage("You have registered this device already.");
-        break;
-      case AttestationResult.FailureUnknown:
-        props.setDebugMessage("An unknown error occurred.");
-        break;
-    }
-  }
   const radiusAuth = () => {
     console.log("auth");
     radiusLogin().then(ret => {
@@ -154,9 +140,14 @@ const Webauthn = function (props: Props) {
   const handleAssertionClick = async () => {
     props.setDebugMessage("Attempting Webauthn Assertion");
     //alert(searchParams.get('to'));
+    console.log(abortController);
+    abortController?.abort();
+    console.log(abortController);
     const result = await performAssertionCeremony(
       props.Discoverable,
-      props.mac
+      props.mac,
+      req,
+      setReq
     );
 
     switch (result) {
