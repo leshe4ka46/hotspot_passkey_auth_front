@@ -1,6 +1,6 @@
 import { Grid } from "@mui/material";
 import React, { useState } from "react";
-import Webauthn from "./Webauthn.tsx";
+import Webauthn from "./Webauthn";
 
 interface Props {
     LoggedIn: boolean;

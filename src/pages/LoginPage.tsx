@@ -25,13 +25,13 @@ import Brightness7Icon from "@mui/icons-material/Brightness7";
 import LogoutIcon from "@mui/icons-material/Logout";
 
 import u2fApi from "u2f-api";
-import { logout, login, radiusLogin } from "../services/ClientService.ts";
+import { logout, login, radiusLogin } from "../services/ClientService";
 import {
   isWebauthnSecure,
   isWebauthnSupported,
-} from "../services/WebauthnService.ts";
-import { getInfo } from "../services/APIService.ts";
-import SecurityKey from "../components/SecurityKey.tsx";
+} from "../services/WebauthnService";
+import { getInfo } from "../services/APIService";
+import SecurityKey from "../components/SecurityKey";
 const totalTime = 5;
 export default function Login() {
   const searchParams = React.useMemo(
@@ -140,7 +140,7 @@ export default function Login() {
     elem.href="intent://networkcheck.kde.org#Intent;scheme=http;end"
     elem.click();
   }
-  function findNextTabStop(el) {
+  function findNextTabStop(el: EventTarget) {
     var universe = document.querySelectorAll('input, button, select, textarea, a[href]');
     var list = Array.prototype.filter.call(universe, function(item) {return item.tabIndex >= "0"});
     var index = list.indexOf(el);

@@ -1,6 +1,6 @@
 import axios from "axios";
-import { LoginBody } from "../models/API.ts";
-import { LoginPath, LogoutPath, ManualLogin } from "../constants/API.ts";
+import { LoginBody } from "../models/API";
+import { LoginPath, LogoutPath, ManualLogin } from "../constants/API";
 
 export async function login(username: string, password: string, mac: string): Promise<boolean> {
     const body: LoginBody = {

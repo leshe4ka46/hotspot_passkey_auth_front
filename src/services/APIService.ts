@@ -1,7 +1,7 @@
 import axios, {AxiosResponse} from "axios";
-import {ErrorResponse, ServiceResponse} from "../models/API.ts";
-import {Info} from "../models/Info.ts";
-import {InfoPath} from "../constants/API.ts";
+import {ErrorResponse, ServiceResponse} from "../models/API";
+import {Info} from "../models/Info";
+import {InfoPath} from "../constants/API";
 
 function toErrorResponse<T>(resp: AxiosResponse<ServiceResponse<T>>): ErrorResponse | undefined {
     if (resp.data && "status" in resp.data && resp.data["status"] === "KO") {
@@ -10,8 +10,8 @@ function toErrorResponse<T>(resp: AxiosResponse<ServiceResponse<T>>): ErrorRespo
     return undefined;
 }
 
-export function toData<T>(resp: AxiosResponse<ServiceResponse<T>>): T | undefined {
-    if (resp.data && "status" in resp.data && resp.data["status"] === "OK") {
+export function toData<T>(resp: void | AxiosResponse<ServiceResponse<T>>): T | undefined {
+    if (resp?.data && "status" in resp.data && resp.data["status"] === "OK") {
         return resp.data.data as T;
     }
     return undefined;
@@ -27,7 +27,7 @@ export function hasServiceError<T>(resp: AxiosResponse<ServiceResponse<T>>) {
 
 export async function getInfo() : Promise<Info | undefined> {
     try {
-        const response = await axios.get<ServiceResponse<Info>>(InfoPath);
+        const response = await axios.get<ServiceResponse<Info>>(InfoPath).catch((err)=>{console.log(err)}).then((res)=>(res));
         return toData<Info>(response);
     } catch (e) {
         console.log(e)
