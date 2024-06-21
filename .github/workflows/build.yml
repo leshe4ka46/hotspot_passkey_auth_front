@@ -21,32 +21,10 @@ jobs:
         uses: https://gitea.com/actions/setup-node@v4
         with:
           node-version: "20"
-          cache: ${{ steps.detect-package-manager.outputs.manager }}
-      - name: Restore cached Primes
-        id: cache-primes-restore
-        uses: https://gitea.com/actions/cache/restore@v4
-        with:
-          path: |
-            node-modules
-          key: ${{ runner.os }}-primes
       - name: Install dependencies
         run: npm i
       - name: Build
         run: npm run build
       - name: Deploy to Server
-        uses: https://gitea.com/aquelle1/ssh-deploy@main
-        env:
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_KEY }}
-          ARGS: "-r"
-          SOURCE: "build/"
-          REMOTE_HOST: ${{ secrets.SSH_HOST }}
-          REMOTE_USER: ${{ secrets.SSH_USER }}
-          REMOTE_PORT: ${{ secrets.SSH_PORT }}
-          TARGET: ${{ secrets.SSH_DIR }}
-      - name: Save Primes
-        id: cache-primes-save
-        uses: https://gitea.com/actions/cache/save@v4
-        with:
-          path: |
-            node-modules
-          key: ${{ steps.cache-primes-restore.outputs.cache-primary-key }}
+        run: |
+          ./deploy.sh
