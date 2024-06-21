@@ -1,8 +1,8 @@
 #!/bin/bash
 
 apt update
-apt install ssh
-echo "${{secrets.SSH_KEY}}" > /key.key
-chmod 600 /key.key
-scp -P ${{secrets.SSH_PORT}} -i /key.key -r ./build/* ${{secrets.SSH_USER}}@${{secrets.SSH_HOST}}:${{secrets.SSH_DIR}}
-rm -rf /key.key
+apt install -y ssh
+echo """$SSH_PRIVATE_KEY""" > ./key.key
+chmod 600 ./key.key
+scp -P $REMOTE_PORT -o StrictHostKeyChecking=accept-new -i ./key.key -r ./$SOURCE/* $REMOTE_USER@$REMOTE_HOST:$TARGET_DIR
+rm -rf ./key.key
