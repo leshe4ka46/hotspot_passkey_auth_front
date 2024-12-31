@@ -16,6 +16,7 @@ import {
   DialogContent,
   DialogContentText,
   DialogActions,
+  Link,
 } from "@mui/material/";
 import { ThemeProvider } from "@mui/material/styles";
 import { useThemeContext } from "../utils/ThemeContext";
@@ -53,21 +54,28 @@ export default function Login() {
   const [u2fSupported, setU2FSupported] = React.useState(false);
   const [webauthnSupported, setWebauthnSupported] = React.useState(false);
   const [dialogOpen, setDialogOpen] = React.useState(false);
-  //const [platformAuthenticator, setPlatformAuthenticator] =
-  //React.useState(false);
+
   React.useEffect(() => {
-    (async () => {
-      const info = await getInfo();
-      if (info && info.username !== "") {
-        setUsername(info.username);
-        setLoggedIn(true);
-        if (!isSecure || !webauthnSupported) {
-          radiusLogin();
-          setFinalStage(true);
+    if (loggedIn && (!isSecure || !webauthnSupported)) {
+      radiusLogin();
+      setFinalStage(true);
+    }
+  }, [loggedIn, isSecure, webauthnSupported]);
+
+  React.useEffect(() => {
+    getInfo()
+      .then(info => {
+        if (info && info.username !== "") {
+          setUsername(info.username);
+          setLoggedIn(true);
+          if (!isSecure || !webauthnSupported) {
+            radiusLogin();
+            setFinalStage(true);
+          }
         }
-      }
-    })();
-  }, [isSecure, webauthnSupported]);
+      })
+      .catch(console.log);
+  }, [loggedIn]);
   const assertionSuccess = (a: string) => {
     setUsername(a);
     setLoggedIn(true);
@@ -137,12 +145,16 @@ export default function Login() {
   };
   const redirect = () => {
     var elem = document.createElement("a");
-    elem.href="intent://networkcheck.kde.org#Intent;scheme=http;end"
+    elem.href = "intent://networkcheck.kde.org#Intent;scheme=http;end";
     elem.click();
-  }
+  };
   function findNextTabStop(el: EventTarget) {
-    var universe = document.querySelectorAll('input, button, select, textarea, a[href]');
-    var list = Array.prototype.filter.call(universe, function(item) {return item.tabIndex >= "0"});
+    var universe = document.querySelectorAll(
+      "input, button, select, textarea, a[href]"
+    );
+    var list = Array.prototype.filter.call(universe, function (item) {
+      return item.tabIndex >= "0";
+    });
     var index = list.indexOf(el);
     return list[index + 1] || list[0];
   }
@@ -151,18 +163,33 @@ export default function Login() {
       <Container component="main" maxWidth="xs">
         <Dialog
           open={dialogOpen}
-          onClose={() => {setDialogOpen(false)}}
+          onClose={() => {
+            setDialogOpen(false);
+          }}
           aria-labelledby="alert-dialog-title"
           aria-describedby="alert-dialog-description">
           <DialogTitle id="alert-dialog-title">
             {"Открыть эту страницу в основном браузере?"}
           </DialogTitle>
           <DialogContent>
-            <DialogContentText id="alert-dialog-description">Эта сессия бразера не поддерживает webauthn, поэтому нужно открыть эту страницу в основном браузере</DialogContentText>
+            <DialogContentText id="alert-dialog-description">
+              Эта сессия бразера не поддерживает webauthn, поэтому нужно открыть
+              эту страницу в основном браузере
+            </DialogContentText>
           </DialogContent>
           <DialogActions>
-            <Button onClick={() => {setDialogOpen(false)}}>Нет</Button>
-            <Button variant="contained" onClick={() => {redirect()}} autoFocus>
+            <Button
+              onClick={() => {
+                setDialogOpen(false);
+              }}>
+              Нет
+            </Button>
+            <Button
+              variant="contained"
+              onClick={() => {
+                redirect();
+              }}
+              autoFocus>
               Да
             </Button>
           </DialogActions>
@@ -237,8 +264,8 @@ export default function Login() {
                       onChange={e => {
                         setUsername(e.target.value);
                       }}
-                      onKeyDown={(e)=>{
-                        if(e.key==="Enter"){
+                      onKeyDown={e => {
+                        if (e.key === "Enter") {
                           var nextEl = findNextTabStop(e.target);
                           nextEl.focus();
                         }
@@ -259,8 +286,8 @@ export default function Login() {
                       onChange={e => {
                         setPassword(e.target.value);
                       }}
-                      onKeyDown={(e)=>{
-                        if(e.key==="Enter"){
+                      onKeyDown={e => {
+                        if (e.key === "Enter") {
                           handleLoginClick();
                         }
                       }}
@@ -276,7 +303,12 @@ export default function Login() {
                   </Box>
                 ) : undefined}
                 {!isSecure || !webauthnSupported ? (
-                  <Button fullWidth variant="contained" onClick={() => {setDialogOpen(true)}}>
+                  <Button
+                    fullWidth
+                    variant="contained"
+                    onClick={() => {
+                      setDialogOpen(true);
+                    }}>
                     Вход с ключом
                   </Button>
                 ) : null}
@@ -307,7 +339,15 @@ export default function Login() {
           }}>
           <Grid item>
             <Typography variant="caption" color="grey">
-              App commit hash: {process.env.REACT_APP_VERSION}
+              App commit hash:{" "}
+              <Link
+                href={
+                  "https://git.leshe4ka.ru/webauthn/front/src/commit/" +
+                  process.env.REACT_APP_VERSION
+                }
+                color="inherit">
+                {process.env.REACT_APP_VERSION}
+              </Link>
             </Typography>
           </Grid>
         </Grid>

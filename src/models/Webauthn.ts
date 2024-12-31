@@ -75,7 +75,6 @@ export interface PublicKeyCredentialJSON
     rawId: string;
     clientExtensionResults: AuthenticationExtensionsClientOutputs;
     response: AuthenticatorAssertionResponseJSON;
-    mac: string;
 }
 
 export enum AttestationResult {
